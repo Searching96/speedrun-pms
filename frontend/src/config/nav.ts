@@ -4,10 +4,9 @@ import {
     Truck,
     Users,
     MapPin,
-    Settings,
-    FileText,
-    Star,
 } from 'lucide-react';
+
+import { ROLES } from '@/features/auth/roles';
 
 export interface NavItem {
     title: string;
@@ -17,54 +16,60 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
+    // Common / Customer
     {
-        title: 'Dashboard',
+        title: 'Home',
         href: '/',
         icon: LayoutDashboard,
+        roles: ROLES.CUSTOMER,
     },
     {
-        title: 'Orders',
+        title: 'My Orders',
         href: '/orders',
         icon: Package,
-        roles: ['CUSTOMER', 'PO_STAFF', 'PO_Provinces_ADMIN'], // Example roles
-    },
-    {
-        title: 'Pickup Requests',
-        href: '/pickups',
-        icon: Truck,
-        roles: ['CUSTOMER', 'PO_STAFF'],
+        roles: ROLES.CUSTOMER,
     },
     {
         title: 'Tracking',
         href: '/tracking',
         icon: MapPin,
+        // Visible to everyone, or just customers? Assuming everyone for now or explicit roles:
+        roles: [...ROLES.CUSTOMER, ...ROLES.STAFF_GROUP, ...ROLES.ADMIN_GROUP],
+    },
+
+    // Admin
+    {
+        title: 'Admin Dashboard',
+        href: '/admin',
+        icon: LayoutDashboard,
+        roles: [...ROLES.ADMIN_GROUP, ...ROLES.MANAGER_GROUP],
     },
     {
-        title: 'Ratings',
-        href: '/ratings',
-        icon: Star,
-    },
-    {
-        title: 'Staff Management',
-        href: '/staff',
+        title: 'Manage Staff',
+        href: '/admin/staff',
         icon: Users,
-        roles: ['PO_WARD_MANAGER', 'WH_WARD_MANAGER', 'PO_PROVINCE_ADMIN', 'WH_PROVINCE_ADMIN', 'SYSTEM_ADMIN'],
+        roles: [...ROLES.ADMIN_GROUP, ...ROLES.MANAGER_GROUP],
+    },
+
+    // Staff
+    {
+        title: 'Staff Dashboard',
+        href: '/staff',
+        icon: LayoutDashboard,
+        roles: ROLES.STAFF_GROUP,
     },
     {
-        title: 'Administrative Units',
-        href: '/admin/units',
-        icon: FileText,
-        roles: ['SYSTEM_ADMIN', 'PO_PROVINCE_ADMIN'],
+        title: 'Manage Orders',
+        href: '/staff/orders',
+        icon: Package,
+        roles: ROLES.STAFF_GROUP,
     },
+
+    // Shipper
     {
-        title: 'Delivery Tasks',
-        href: '/shipper/tasks',
+        title: 'My Tasks',
+        href: '/shipper',
         icon: Truck,
-        roles: ['SHIPPER'],
-    },
-    {
-        title: 'Settings',
-        href: '/settings',
-        icon: Settings,
+        roles: ROLES.SHIPPER,
     },
 ];

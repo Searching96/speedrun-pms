@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create a configured axios instance
 export const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+    baseURL: import.meta.env.VITE_API_URL || '/',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -28,27 +28,21 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         // Handle 401 Unauthorized (Token Expired)
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
+        // Skip for login/register endpoints to allow specific error messages to show
+        // Handle 401 Unauthorized (Token Expired)
+        // Skip for login/register endpoints to allow specific error messages to show
+        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/login')) {
+            // No refresh token available in backend yet.
+            // Production behavior: Clear session and redirect to login to force re-auth.
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
 
-            try {
-                // TODO: Replace with actual endpoint to refresh token
-                // const { data } = await axios.post('/api/auth/refresh');
-                // const newToken = data.accessToken;
-
-                // For now, simulating a failed refresh to force logout since we don't have the endpoint yet
-                throw new Error("Refresh token endpoint not implemented");
-
-                // localStorage.setItem('accessToken', newToken);
-                // api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-                // return api(originalRequest);
-            } catch (refreshError) {
-                // If refresh fails, logout
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('user');
-                window.location.href = '/login';
-                return Promise.reject(refreshError);
+            // Redirect to login
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login?expired=true';
             }
+
+            return Promise.reject(new Error("Session expired. Please login again."));
         }
 
         // Standardize error message

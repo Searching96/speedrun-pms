@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@/tests/utils';
 import { LoginPage } from './LoginPage';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import * as api from '@/api';
 import { toast } from 'sonner';
 
@@ -76,13 +76,13 @@ describe('LoginPage', () => {
         const mockToken = 'mock-token';
         const mockUser = { id: '1', username: 'test', role: 'ADMIN' };
 
-        (api.authApi.login as any).mockResolvedValue({
-            data: { token: mockToken }
-        });
+        vi.mocked(api.authApi.login).mockResolvedValue({
+            data: { token: mockToken } as any
+        } as any);
 
-        (api.authApi.fetchMe as any).mockResolvedValue({
+        vi.mocked(api.authApi.fetchMe).mockResolvedValue({
             data: mockUser
-        });
+        } as any);
 
         render(<LoginPage />);
 
@@ -105,7 +105,7 @@ describe('LoginPage', () => {
     it('handles login failure', async () => {
         // Mock failed API response
         const errorMsg = 'Invalid credentials';
-        (api.authApi.login as any).mockRejectedValue(new Error(errorMsg));
+        vi.mocked(api.authApi.login).mockRejectedValue(new Error(errorMsg));
 
         render(<LoginPage />);
 

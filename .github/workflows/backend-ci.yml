@@ -20,14 +20,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up MySQL
-        uses: mirromutth/mysql-action@v1.1
-        with:
-          mysql version: '8.0'
-          mysql database: 'pms_db'
-          mysql root password: 'octguy'
-
+      
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:

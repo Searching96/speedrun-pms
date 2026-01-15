@@ -45,7 +45,7 @@ public class IAuthServiceImpl implements IAuthService {
 
         if (account.isEmpty()) {
             log.error("Username not found: {}", username);
-            throw new BadCredentialsException("Invalid username or password.");
+            throw new org.f3.postalmanagement.exception.AccountNotFoundException("Username not found");
         }
 
         Authentication authentication = authenticationManager.authenticate(

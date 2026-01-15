@@ -2,76 +2,78 @@ import { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { ROLES } from '@/features/auth/roles';
 
 // Lazy load pages for performance (Code Splitting)
-const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then(module => ({ default: module.LoginPage })));
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then(module => ({ default: module.RegisterPage })));
 const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })));
+const OrdersPage = lazy(() => import('@/pages/orders/OrdersPage').then(module => ({ default: module.OrdersPage })));
 
-function UnauthorizedPage() {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <div className="space-y-4 text-center">
-        <h1 className="text-4xl font-bold text-destructive">403</h1>
-        <p className="text-lg text-muted-foreground">
-          You don't have permission to access this page.
-        </p>
-        <a
-          href="/"
-          className="inline-block rounded-md bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          Go Home
-        </a>
-      </div>
-    </div>
-  );
-}
 
-function NotFoundPage() {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <div className="space-y-4 text-center">
-        <h1 className="text-4xl font-bold text-muted-foreground">404</h1>
-        <p className="text-lg text-muted-foreground">Page not found.</p>
-        <a
-          href="/"
-          className="inline-block rounded-md bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          Go Home
-        </a>
-      </div>
-    </div>
-  );
-}
-
-function LoadingSpinner() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-    </div>
-  );
-}
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NotFoundPage } from '@/pages/NotFoundPage';
+import { UnauthorizedPage } from '@/pages/UnauthorizedPage';
 
 function App() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        {/* Protected Dashboard Routes */}
+        {/* Customer Routes */}
         <Route
           path="/"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={ROLES.CUSTOMER}>
               <DashboardLayout />
             </ProtectedRoute>
           }
         >
           <Route index element={<HomePage />} />
-          {/* Add more protected routes here */}
-          <Route path="orders" element={<div>Orders Page</div>} />
-          <Route path="pickups" element={<div>Pickups Page</div>} />
+          <Route path="orders" element={<OrdersPage />} />
           <Route path="tracking" element={<div>Tracking Page</div>} />
+        </Route>
+
+        {/* Admin/Manager Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={[...ROLES.ADMIN_GROUP, ...ROLES.MANAGER_GROUP]}>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<div>Admin Dashboard</div>} />
+        </Route>
+
+        {/* Staff Routes */}
+        <Route
+          path="/staff"
+          element={
+            <ProtectedRoute allowedRoles={ROLES.STAFF_GROUP}>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<div>Staff Dashboard</div>} />
+          <Route path="orders" element={<div>Orders Management</div>} />
+          <Route path="pickups" element={<div>Pickup Requests</div>} />
+        </Route>
+
+        {/* Shipper Routes */}
+        <Route
+          path="/shipper"
+          element={
+            <ProtectedRoute allowedRoles={ROLES.SHIPPER}>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<div>My Tasks</div>} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

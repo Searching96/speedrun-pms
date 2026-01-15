@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleBadCredentialsException(BadCredentialsException ex) {
         ApiResponse<?> response = ApiResponse.builder()
                 .success(false)
-                .message("Invalid username or password")
+                .message("Incorrect password")
                 .errorCode("BAD_CREDENTIALS")
                 .build();
 

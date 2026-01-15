@@ -1,5 +1,5 @@
 // Barrel export for all API services
-export { authApi } from './auth.api';
+export { authApi } from '@/features/auth/api/auth.api';
 export { ordersApi } from './orders.api';
 export { pickupApi } from './pickup.api';
 export { trackingApi } from './tracking.api';

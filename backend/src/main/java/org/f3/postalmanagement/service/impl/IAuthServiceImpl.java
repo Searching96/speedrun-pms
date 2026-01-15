@@ -12,6 +12,8 @@ import org.f3.postalmanagement.enums.SubscriptionPlan;
 import org.f3.postalmanagement.jwt.JwtUtil;
 import org.f3.postalmanagement.repository.AccountRepository;
 import org.f3.postalmanagement.repository.CustomerRepository;
+import org.f3.postalmanagement.entity.actor.Employee;
+import org.f3.postalmanagement.repository.EmployeeRepository;
 import org.f3.postalmanagement.service.IAuthService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -32,6 +34,7 @@ public class IAuthServiceImpl implements IAuthService {
     private final JwtUtil jwtUtil;
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
+    private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -53,8 +56,29 @@ public class IAuthServiceImpl implements IAuthService {
         String token = jwtUtil.generateToken(userDetails);
 
         log.info("Login successful for username: {}", username);
+
+        // Fetch user details for response
+        String fullName = username;
+        java.util.UUID userId = account.get().getId();
+        String roleName = account.get().getRole().name();
+
+        if (account.get().getRole() == Role.CUSTOMER) {
+            Optional<Customer> customer = customerRepository.findByAccount(account.get());
+            if (customer.isPresent()) {
+                fullName = customer.get().getFullName();
+            }
+        } else {
+            Optional<Employee> employee = employeeRepository.findByAccount(account.get());
+            if (employee.isPresent()) {
+                fullName = employee.get().getFullName();
+            }
+        }
+
         return AuthResponse.builder()
                 .token(token)
+                .role(roleName)
+                .id(userId)
+                .fullName(fullName)
                 .build();
     }
 

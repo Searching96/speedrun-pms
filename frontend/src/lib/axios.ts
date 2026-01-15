@@ -23,19 +23,32 @@ api.interceptors.request.use(
 
 // Response Interceptor: Handle Errors (401, etc.)
 api.interceptors.response.use(
-    (response) => response.data, // Unwrapping response.data for convenience
-    async (error) => {
+    (response) => response.data,
+    async (error: any) => {
         const originalRequest = error.config;
 
         // Handle 401 Unauthorized (Token Expired)
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
-            // TODO: Implement Refresh Token Logic here if backend supports it
-            // For now, logout and redirect to login
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
+            try {
+                // TODO: Replace with actual endpoint to refresh token
+                // const { data } = await axios.post('/api/auth/refresh');
+                // const newToken = data.accessToken;
+
+                // For now, simulating a failed refresh to force logout since we don't have the endpoint yet
+                throw new Error("Refresh token endpoint not implemented");
+
+                // localStorage.setItem('accessToken', newToken);
+                // api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+                // return api(originalRequest);
+            } catch (refreshError) {
+                // If refresh fails, logout
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
         }
 
         // Standardize error message

@@ -1,68 +1,11 @@
+import { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { useAuth } from '@/features/auth';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
-// Placeholder pages - to be replaced with actual implementations
-function HomePage() {
-  const { user, logout, isAuthenticated } = useAuth();
-
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
-      <div className="w-full max-w-md space-y-6 rounded-lg border bg-card p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-foreground">
-          Postal Management System
-        </h1>
-
-        {isAuthenticated ? (
-          <>
-            <p className="text-muted-foreground">
-              Welcome, <strong>{user?.fullName || user?.username}</strong>!
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Role: <code className="rounded bg-muted px-1 py-0.5">{user?.role}</code>
-            </p>
-            <button
-              onClick={logout}
-              className="w-full rounded-md bg-destructive px-4 py-2 text-destructive-foreground transition-colors hover:bg-destructive/90"
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-muted-foreground">
-              Please login to continue.
-            </p>
-            <a
-              href="/login"
-              className="block w-full rounded-md bg-primary px-4 py-2 text-center text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Go to Login
-            </a>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function LoginPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-6 rounded-lg border bg-card p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-foreground">Login</h1>
-        <p className="text-muted-foreground">
-          Login page placeholder - implement login form here.
-        </p>
-        <a
-          href="/"
-          className="block text-center text-sm text-primary hover:underline"
-        >
-          Back to Home
-        </a>
-      </div>
-    </div>
-  );
-}
+// Lazy load pages for performance (Code Splitting)
+const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })));
 
 function UnauthorizedPage() {
   return (
@@ -100,14 +43,40 @@ function NotFoundPage() {
   );
 }
 
+function LoadingSpinner() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  );
+}
+
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/unauthorized" element={<UnauthorizedPage />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+        {/* Protected Dashboard Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<HomePage />} />
+          {/* Add more protected routes here */}
+          <Route path="orders" element={<div>Orders Page</div>} />
+          <Route path="pickups" element={<div>Pickups Page</div>} />
+          <Route path="tracking" element={<div>Tracking Page</div>} />
+        </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   );
 }
 

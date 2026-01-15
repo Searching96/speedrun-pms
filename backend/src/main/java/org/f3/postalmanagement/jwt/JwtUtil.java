@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.f3.postalmanagement.entity.actor.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -19,11 +20,21 @@ import java.util.UUID;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:ZUZsJvraCKD/K8VtSbkJuw/4jGPIPHPRuBzNkkI97xN2uw2cJrZCT5pGPABywv0Mp9QtzzRz0wm0AebGxUwtUw==}")
+    @Value("${jwt.secret}")
     private String secretKey;
 
     @Value("${jwt.expiration:86400000}")
     private Long expiration;
+
+    @PostConstruct
+    public void validateConfiguration() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("JWT secret must be configured via jwt.secret property");
+        }
+        if (secretKey.length() < 64) {
+            throw new IllegalStateException("JWT secret must be at least 64 characters for security");
+        }
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());

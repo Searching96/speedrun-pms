@@ -4,15 +4,24 @@ spring:
 
   # Database Configuration
   datasource:
-    url: jdbc:mysql://localhost:3306/pms_db
-    username: root
-    password: octguy
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/pms_db}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:octguy}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # HikariCP Connection Pool Configuration
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: PMS-HikariPool
 
   # JPA/Hibernate Configuration
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -20,15 +29,36 @@ spring:
         format_sql: true
     open-in-view: false
 
+  # Graceful Shutdown
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
 # Server Configuration
 server:
   port: 8080
+  shutdown: graceful
 
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
 
+# Logging Configuration
 logging:
   level:
     org.f3.postalmanagement: INFO
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}

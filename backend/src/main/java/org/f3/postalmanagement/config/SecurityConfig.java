@@ -71,7 +71,21 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        
+        // Environment-aware CORS: restrict in production, allow localhost in dev
+        String allowedOriginsEnv = System.getenv("CORS_ALLOWED_ORIGINS");
+        if (allowedOriginsEnv != null && !allowedOriginsEnv.isBlank()) {
+            configuration.setAllowedOrigins(Arrays.asList(allowedOriginsEnv.split(",")));
+        } else {
+            // Default for development: allow common local dev ports
+            configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost:80",
+                "http://localhost:8080"
+            ));
+        }
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

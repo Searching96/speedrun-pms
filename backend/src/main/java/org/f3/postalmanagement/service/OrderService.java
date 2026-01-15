@@ -2,6 +2,7 @@ package org.f3.postalmanagement.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.f3.postalmanagement.dto.request.CreateOrderRequest;
 import org.f3.postalmanagement.dto.response.OrderResponse;
 import org.f3.postalmanagement.entity.Order;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -27,40 +29,17 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
+    private final TrackingNumberGenerator trackingNumberGenerator;
 
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
         Account currentAccount = SecurityUtils.getCurrentAccount();
-        Customer customer;
-        Employee employee = null;
+        Customer customer = getCurrentCustomer(currentAccount);
 
-        if (currentAccount.getRole() == Role.CUSTOMER) {
-            customer = customerRepository.findByAccount(currentAccount)
-                    .orElseThrow(() -> new IllegalArgumentException("Customer profile not found"));
-        } else if (currentAccount.getRole() == Role.PO_STAFF) {
-            // If PO_STAFF creates order, who is the customer?
-            // In a real system, they might select a customer or create a guest customer.
-            // For MVP, let's assume they are creating it *for* a walk-in customer.
-            // But our schema requires a customer_id.
-            // Assuming for now PO_STAFF creates order for a 'walk-in' guest or specific user.
-            // To simplify, let's limit creation to CUSTOMER for now, OR required 'customerId' in request if PO_STAFF.
-            // Since DTO doesn't have customerId, let's assume currently only CUSTOMER creates orders online,
-            // OR PO_STAFF creates for a default/guest customer.
-            // Let's THROW for now if not CUSTOMER, to keep it safe until updated.
-            // Wait, requirements say "Post office staff receives...".
-            // Let's fetch the customer by phone number if we had it, or create on fly?
-            // "Orders table -> customer_id NOT NULL".
-            // I'll assume for this MVP step: Only Authenticated CUSTOMERs can create orders via this API.
-            // If PO_STAFF needs to, we'll need to look up customer by phone.
-            // I will implement: Only CUSTOMER role can create for now.
-            customer = customerRepository.findByAccount(currentAccount)
-                    .orElseThrow(() -> new IllegalArgumentException("Customer profile not found"));
-        } else {
-            throw new IllegalArgumentException("Only Customers can create orders via this endpoint");
-        }
-
-        // Generate Tracking Number (Simple)
-        String trackingNumber = "VN" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+        // Generate unique tracking number
+        String trackingNumber = trackingNumberGenerator.generate();
+        
+        log.info("Creating order for customer: {}, tracking: {}", customer.getId(), trackingNumber);
 
         Order order = Order.builder()
                 .trackingNumber(trackingNumber)
@@ -85,7 +64,22 @@ public class OrderService {
                 .build();
 
         Order savedOrder = orderRepository.save(order);
+        log.info("Order created successfully: {}", trackingNumber);
         return mapToResponse(savedOrder);
+    }
+    
+    /**
+     * Gets the current customer from the authenticated account.
+     * Only CUSTOMER role is allowed to create orders via this endpoint.
+     */
+    private Customer getCurrentCustomer(Account account) {
+        if (account.getRole() != Role.CUSTOMER) {
+            log.warn("Non-customer role attempted to create order: {}", account.getRole());
+            throw new IllegalArgumentException("Only customers can create orders via this endpoint");
+        }
+        
+        return customerRepository.findByAccount(account)
+                .orElseThrow(() -> new IllegalArgumentException("Customer profile not found"));
     }
 
     public Page<OrderResponse> getMyOrders(Pageable pageable) {
@@ -119,21 +113,27 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
         
+        log.info("Cancellation requested for order: {} by user: {}", orderId, currentAccount.getId());
+        
         // Check ownership
         if (currentAccount.getRole() == Role.CUSTOMER) {
              Customer customer = customerRepository.findByAccount(currentAccount)
                     .orElseThrow(() -> new IllegalArgumentException("Customer profile not found"));
              if (!order.getCustomer().getId().equals(customer.getId())) {
-                 throw new IllegalArgumentException("Access denied");
+                 log.warn("Access denied: User {} attempted to cancel order {} owned by {}", 
+                     currentAccount.getId(), orderId, order.getCustomer().getId());
+                 throw new IllegalArgumentException("Access denied: You can only cancel your own orders");
              }
         }
         
         if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.AWAITING_PICKUP) {
+            log.warn("Cannot cancel order {} in status: {}", orderId, order.getStatus());
             throw new IllegalArgumentException("Cannot cancel order in status: " + order.getStatus());
         }
         
         order.setStatus(OrderStatus.CANCELLED);
         Order saved = orderRepository.save(order);
+        log.info("Order {} cancelled successfully", orderId);
         return mapToResponse(saved);
     }
 

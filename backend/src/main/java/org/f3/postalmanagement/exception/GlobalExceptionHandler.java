@@ -1,5 +1,6 @@
 package org.f3.postalmanagement.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.f3.postalmanagement.entity.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -103,11 +105,41 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
+    @ExceptionHandler(InsufficientPermissionsException.class)
+    public ResponseEntity<ApiResponse<?>> handleInsufficientPermissionsException(InsufficientPermissionsException ex) {
+        log.warn("Insufficient permissions: {}", ex.getMessage());
+        ApiResponse<?> response = ApiResponse.builder()
+                .success(false)
+                .message(ex.getMessage())
+                .errorCode("INSUFFICIENT_PERMISSIONS")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @ExceptionHandler(OrderNotCancellableException.class)
+    public ResponseEntity<ApiResponse<?>> handleOrderNotCancellableException(OrderNotCancellableException ex) {
+        log.warn("Order not cancellable: {}", ex.getMessage());
+        ApiResponse<?> response = ApiResponse.builder()
+                .success(false)
+                .message(ex.getMessage())
+                .errorCode("ORDER_NOT_CANCELLABLE")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGenericException(Exception ex) {
+        // Log full details for debugging
+        log.error("Unexpected error occurred", ex);
+        
+        // Don't expose internal error details in production
+        String message = "An unexpected error occurred. Please contact support if the problem persists.";
+        
         ApiResponse<?> apiResponse = new ApiResponse<>(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred: " + ex.getMessage(),
+                message,
                 null,
                 "INTERNAL_SERVER_ERROR"
         );

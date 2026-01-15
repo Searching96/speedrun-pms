@@ -12,10 +12,10 @@ services:
       ]
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: admin
-      MYSQL_DATABASE: pms_db
-      MYSQL_USER: postal_user
-      MYSQL_PASSWORD: postal_pass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -57,7 +57,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "false"
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
-      JWT_SECRET: ${JWT_SECRET:-ZUZsJvraCKD/K8VtSbkJuw/4jGPIPHPRuBzNkkI97xN2uw2cJrZCT5pGPABywv0Mp9QtzzRz0wm0AebGxUwtUw==}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8080:8080"
     networks:

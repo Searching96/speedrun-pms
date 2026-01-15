@@ -9,6 +9,7 @@ import org.f3.postalmanagement.entity.ApiResponse;
 import org.f3.postalmanagement.service.IDashboardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +33,17 @@ public class DashboardController {
                     .success(true)
                     .message("New system admin registered successfully")
                     .build()
+        );
+    }
+
+    @GetMapping("/stats")
+    @Operation(summary = "Get system stats", description = "Get global statistics for admin dashboard")
+    public ResponseEntity<ApiResponse<?>> getSystemStats() {
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .data(dashboardService.getSystemStats())
+                        .build()
         );
     }
 }

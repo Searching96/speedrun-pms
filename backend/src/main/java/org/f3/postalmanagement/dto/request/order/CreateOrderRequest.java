@@ -52,13 +52,8 @@ public class CreateOrderRequest {
 
     private String description;
 
-    // -- Pricing (Calculated by backend normally, but maybe provided by frontend if they have a calc? 
-    // Plan: "Pricing... shipping_fee... NOT NULL". 
-    // Usually backend calculates this. But to keep it simple, let's accept it from request OR calculate it.
-    // Let's assume frontend sends calculated fee or 0 for now, or we define a simple rule.
-    // I'll make it optional in request and calculate defaults if missing, OR require it.
-    // Let's require it to match the schema "NOT NULL" immediately, assuming frontend estimates it.
-    @NotNull(message = "Shipping fee is required") // In real app, backend calculates.
+    // -- Pricing (Backend calculates this automatically if not provided)
+    // Frontend can optionally provide a pre-calculated fee for display purposes
     private BigDecimal shippingFee;
 
     private BigDecimal codAmount;

@@ -33,22 +33,15 @@ export function LoginForm() {
         try {
             // 1. Perform Login
             const loginRes = await authApi.login(data);
-            if (loginRes.data?.token) {
-                const token = loginRes.data.token;
+            if (loginRes.data) {
+                const userData = loginRes.data;
 
-                // 2. Set API token headers for subsequent requests
-                localStorage.setItem('accessToken', token);
-
-                // 3. Fetch User Details (to get Role)
-                const userRes = await authApi.fetchMe();
-                const user = userRes.data as any; // Type assertion needed until API types are fully aligned
-
-                // 4. Update Global Auth State
-                login(token, user);
+                // 2. Update Global Auth State (Token is handled by cookie automatically)
+                login(userData as any);
                 toast.success('Login successful');
 
-                // 5. Smart Redirection
-                const role = user.role;
+                // 3. Smart Redirection
+                const role = userData.role as any;
                 if (ROLES.ADMIN_GROUP.includes(role) || ROLES.MANAGER_GROUP.includes(role)) {
                     navigate('/admin');
                 } else if (ROLES.STAFF_GROUP.includes(role)) {
@@ -63,8 +56,6 @@ export function LoginForm() {
         } catch (error: any) {
             console.error('Login Error:', error);
             toast.error(error.message || 'Login failed');
-            // Clear token if we failed partway
-            localStorage.removeItem('accessToken');
         } finally {
             setLoading(false);
         }

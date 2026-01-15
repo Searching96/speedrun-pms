@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.f3.postalmanagement.dto.request.order.CreateOrderRequest;
 import org.f3.postalmanagement.dto.response.order.OrderResponse;
+import org.f3.postalmanagement.dto.response.order.PublicOrderResponse;
+import org.f3.postalmanagement.entity.ApiResponse;
 import org.f3.postalmanagement.entity.order.Order;
 import org.f3.postalmanagement.entity.actor.Account;
 import org.f3.postalmanagement.entity.actor.Customer;
@@ -30,6 +32,7 @@ public class OrderService {
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
     private final TrackingNumberGenerator trackingNumberGenerator;
+    private final ShippingFeeCalculator shippingFeeCalculator;
 
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
@@ -40,6 +43,21 @@ public class OrderService {
         String trackingNumber = trackingNumberGenerator.generate();
         
         log.info("Creating order for customer: {}, tracking: {}", customer.getId(), trackingNumber);
+
+        // Auto-calculate shipping fee if not provided
+        java.math.BigDecimal shippingFee = request.getShippingFee();
+        if (shippingFee == null || shippingFee.compareTo(java.math.BigDecimal.ZERO) == 0) {
+            log.info("Calculating shipping fee automatically");
+            shippingFee = shippingFeeCalculator.calculateFee(
+                request.getSenderWardCode(),
+                request.getReceiverWardCode(),
+                request.getWeightKg(),
+                request.getLengthCm(),
+                request.getWidthCm(),
+                request.getHeightCm()
+            );
+            log.info("Calculated shipping fee: {}", shippingFee);
+        }
 
         Order order = Order.builder()
                 .trackingNumber(trackingNumber)
@@ -57,7 +75,7 @@ public class OrderService {
                 .widthCm(request.getWidthCm())
                 .heightCm(request.getHeightCm())
                 .description(request.getDescription())
-                .shippingFee(request.getShippingFee())
+                .shippingFee(shippingFee)
                 .codAmount(request.getCodAmount())
                 .status(OrderStatus.PENDING)
                 // originOffice is null for online orders until assigned
@@ -101,10 +119,18 @@ public class OrderService {
         return Page.empty();
     }
     
-    public OrderResponse getOrderByTrackingNumber(String trackingNumber) {
+    public PublicOrderResponse getPublicOrderByTrackingNumber(String trackingNumber) {
         Order order = orderRepository.findByTrackingNumber(trackingNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
-        return mapToResponse(order);
+        return PublicOrderResponse.builder()
+                .id(order.getId())
+                .trackingNumber(order.getTrackingNumber())
+                .status(order.getStatus().name())
+                .senderName(order.getSenderName())
+                .receiverName(order.getReceiverName())
+                .createdAt(order.getCreatedAt())
+                .updatedAt(order.getUpdatedAt())
+                .build();
     }
     
     @Transactional
@@ -135,6 +161,11 @@ public class OrderService {
         Order saved = orderRepository.save(order);
         log.info("Order {} cancelled successfully", orderId);
         return mapToResponse(saved);
+    }
+
+    public Page<OrderResponse> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable)
+                .map(this::mapToResponse);
     }
 
     private OrderResponse mapToResponse(Order order) {

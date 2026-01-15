@@ -2,8 +2,10 @@ package org.f3.postalmanagement.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.f3.postalmanagement.dto.request.employee.ward.CreateShipperRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardManagerEmployeeRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardStaffRequest;
+import org.f3.postalmanagement.dto.request.employee.ward.UpdateEmployeeRequest;
 import org.f3.postalmanagement.dto.response.employee.EmployeeResponse;
 import org.f3.postalmanagement.entity.actor.Account;
 import org.f3.postalmanagement.entity.actor.Employee;
@@ -17,6 +19,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -83,6 +89,118 @@ public class WardManagerServiceImpl implements IWardManagerService {
                 currentOffice,
                 currentAccount
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeResponse> getEmployees(Account currentAccount) {
+        Employee currentEmployee = getCurrentEmployee(currentAccount);
+        Office currentOffice = currentEmployee.getOffice();
+
+        log.info("Ward Manager {} retrieving employees for office {}", currentAccount.getUsername(), currentOffice.getOfficeName());
+
+        return employeeRepository.findAllByOffice(currentOffice).stream()
+                .map(this::mapToEmployeeResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmployeeResponse getEmployee(UUID employeeId, Account currentAccount) {
+        Employee wardManager = getCurrentEmployee(currentAccount);
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found with ID: " + employeeId));
+
+        // Check if employee belongs to the same office
+        if (!employee.getOffice().getId().equals(wardManager.getOffice().getId())) {
+            log.error("Access denied: Employee {} does not belong to Office {}", employeeId, wardManager.getOffice().getId());
+            throw new AccessDeniedException("You do not have permission to view employees from other offices");
+        }
+
+        return mapToEmployeeResponse(employee);
+    }
+
+    @Override
+    @Transactional
+    public EmployeeResponse updateEmployee(UUID employeeId, UpdateEmployeeRequest request, Account currentAccount) {
+        Employee wardManager = getCurrentEmployee(currentAccount);
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found with ID: " + employeeId));
+
+        // Check if employee belongs to the same office
+        if (!employee.getOffice().getId().equals(wardManager.getOffice().getId())) {
+            log.error("Access denied: Cannot update Employee {} from different Office", employeeId);
+            throw new AccessDeniedException("You do not have permission to update employees from other offices");
+        }
+
+        Account account = employee.getAccount();
+
+        // Check unique phone number if changed
+        if (!employee.getPhoneNumber().equals(request.getPhoneNumber()) && 
+            accountRepository.existsByUsername(request.getPhoneNumber())) {
+            throw new IllegalArgumentException("Phone number already registered: " + request.getPhoneNumber());
+        }
+
+        // Check unique email if changed
+        if (!account.getEmail().equals(request.getEmail()) && 
+            accountRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already registered: " + request.getEmail());
+        }
+
+        // Update details
+        employee.setFullName(request.getFullName());
+        employee.setPhoneNumber(request.getPhoneNumber());
+        account.setUsername(request.getPhoneNumber());
+        account.setEmail(request.getEmail());
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            account.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        accountRepository.save(account);
+        Employee savedEmployee = employeeRepository.save(employee);
+
+        log.info("Updated employee {} by Ward Manager {}", employeeId, currentAccount.getUsername());
+
+        return mapToEmployeeResponse(savedEmployee);
+    }
+
+    @Override
+    @Transactional
+    public void deleteEmployee(UUID employeeId, Account currentAccount) {
+        Employee wardManager = getCurrentEmployee(currentAccount);
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found with ID: " + employeeId));
+
+        // Check if employee belongs to the same office
+        if (!employee.getOffice().getId().equals(wardManager.getOffice().getId())) {
+            log.error("Access denied: Cannot delete Employee {} from different Office", employeeId);
+            throw new AccessDeniedException("You do not have permission to delete employees from other offices");
+        }
+
+        // Do not allow deleting self
+        if (employeeId.equals(wardManager.getId())) {
+            throw new IllegalArgumentException("You cannot delete your own account");
+        }
+
+        // Soft delete Employee and deactivate Account
+        Account account = employee.getAccount();
+        account.setActive(false);
+        accountRepository.save(account);
+        
+        employeeRepository.delete(employee);
+        log.info("Soft deleted employee {} by Ward Manager {}", employeeId, currentAccount.getUsername());
+    }
+
+    private EmployeeResponse mapToEmployeeResponse(Employee employee) {
+        return EmployeeResponse.builder()
+                .employeeId(employee.getId())
+                .fullName(employee.getFullName())
+                .phoneNumber(employee.getPhoneNumber())
+                .email(employee.getAccount().getEmail())
+                .role(employee.getAccount().getRole().name())
+                .officeName(employee.getOffice().getOfficeName())
+                .build();
     }
 
     /**
@@ -158,21 +276,14 @@ public class WardManagerServiceImpl implements IWardManagerService {
         log.info("Created new employee {} with role {} for office {} by Ward Manager {}",
                 phoneNumber, targetRole, targetOffice.getOfficeName(), currentAccount.getUsername());
 
-        return EmployeeResponse.builder()
-                .employeeId(savedEmployee.getId())
-                .fullName(savedEmployee.getFullName())
-                .phoneNumber(savedEmployee.getPhoneNumber())
-                .email(savedAccount.getEmail())
-                .role(savedAccount.getRole().name())
-                .officeName(targetOffice.getOfficeName())
-                .build();
+        return mapToEmployeeResponse(savedEmployee);
     }
 
     /**
      * Validate that the office type matches the role being assigned.
      * 
-     * PO_WARD_MANAGER, PO_STAFF -&gt; WARD_POST
-     * WH_WARD_MANAGER, WH_STAFF -&gt; WARD_WAREHOUSE
+     * PO_WARD_MANAGER, PO_STAFF -> WARD_POST
+     * WH_WARD_MANAGER, WH_STAFF -> WARD_WAREHOUSE
      */
     private void validateOfficeTypeForRole(Role role, OfficeType officeType) {
         boolean isValid = switch (role) {

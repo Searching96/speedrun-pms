@@ -59,6 +59,14 @@ export function CreateOrderForm({ onSuccess, onCancel }: CreateOrderFormProps) {
     const senderProvinceCode = form.watch("senderProvinceCode")
     const receiverProvinceCode = form.watch("receiverProvinceCode")
 
+    // Watch fields for shipping fee calculation
+    const weightKg = form.watch("weightKg")
+    const lengthCm = form.watch("lengthCm")
+    const widthCm = form.watch("widthCm")
+    const heightCm = form.watch("heightCm")
+    const senderWardCode = form.watch("senderWardCode")
+    const receiverWardCode = form.watch("receiverWardCode")
+
     // Fetch provinces on mount
     useEffect(() => {
         locationApi.getProvinces()
@@ -87,6 +95,27 @@ export function CreateOrderForm({ onSuccess, onCancel }: CreateOrderFormProps) {
             setReceiverWards([])
         }
     }, [receiverProvinceCode])
+
+    // Auto-calculate shipping fee when relevant fields change
+    useEffect(() => {
+        if (weightKg && senderWardCode && receiverWardCode) {
+            orderApi.calculateShippingFee({
+                senderWardCode,
+                receiverWardCode,
+                weightKg,
+                lengthCm,
+                widthCm,
+                heightCm,
+            })
+                .then((fee) => {
+                    form.setValue("shippingFee", fee)
+                })
+                .catch((err) => {
+                    console.error("Failed to calculate shipping fee", err)
+                    // Keep existing value or set to 0
+                })
+        }
+    }, [weightKg, lengthCm, widthCm, heightCm, senderWardCode, receiverWardCode, form])
 
     const onSubmit: SubmitHandler<CreateOrderFormValues> = async (values) => {
         setLoading(true)
@@ -321,14 +350,60 @@ export function CreateOrderForm({ onSuccess, onCancel }: CreateOrderFormProps) {
                             )}
                         />
                     </div>
+                    <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="lengthCm"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Length (cm)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" placeholder="0" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="widthCm"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Width (cm)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" placeholder="0" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="heightCm"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Height (cm)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" placeholder="0" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                     <FormField
                         control={form.control}
                         name="shippingFee"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Shipping Fee (VND)</FormLabel>
+                                <FormLabel>Shipping Fee (VND) - Auto-calculated</FormLabel>
                                 <FormControl>
-                                    <Input type="number" {...field} />
+                                    <Input
+                                        type="number"
+                                        {...field}
+                                        readOnly
+                                        className="bg-muted cursor-not-allowed"
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

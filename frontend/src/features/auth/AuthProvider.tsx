@@ -13,7 +13,7 @@ interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (token: string, userData: User) => void;
+    login: (userData: User) => void;
     logout: () => void;
 }
 
@@ -24,11 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Check for existing session
-        const token = localStorage.getItem('accessToken');
+        // Check for existing user profile hint
         const storedUser = localStorage.getItem('user');
 
-        if (token && storedUser) {
+        if (storedUser) {
             try {
                 setUser(JSON.parse(storedUser));
             } catch (e) {
@@ -39,15 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    const login = (token: string, userData: User) => {
-        localStorage.setItem('accessToken', token);
+    const login = (userData: User) => {
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
     };
 
     const logout = () => {
-        localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
+        // The cookie will be cleared by the backend if authApi.logout() is called.
+        // If this is a forced local logout, we just clear the profile hint.
         setUser(null);
     };
 

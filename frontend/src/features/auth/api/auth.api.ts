@@ -27,4 +27,11 @@ export const authApi = {
     fetchMe: async (): Promise<ApiResponse<unknown>> => {
         return api.get('/api/users/me');
     },
+
+    /**
+     * Logout and clear authentication cookie
+     */
+    logout: async (): Promise<ApiResponse<void>> => {
+        return api.post('/api/auth/logout');
+    },
 };

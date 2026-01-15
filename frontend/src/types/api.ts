@@ -48,6 +48,9 @@ export interface CustomerRegisterRequest {
 
 export interface AuthResponse {
     token: string;
+    role: string;
+    id: string;
+    fullName: string;
 }
 
 // =============================================================================

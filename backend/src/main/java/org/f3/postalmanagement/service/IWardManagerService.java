@@ -3,8 +3,12 @@ package org.f3.postalmanagement.service;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateShipperRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardManagerEmployeeRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardStaffRequest;
+import org.f3.postalmanagement.dto.request.employee.ward.UpdateEmployeeRequest;
 import org.f3.postalmanagement.dto.response.employee.EmployeeResponse;
 import org.f3.postalmanagement.entity.actor.Account;
+
+import java.util.List;
+import java.util.UUID;
 
 public interface IWardManagerService {
 
@@ -44,5 +48,40 @@ public interface IWardManagerService {
      * @return the created employee response
      */
     EmployeeResponse createShipper(CreateShipperRequest request, Account currentAccount);
+
+    /**
+     * Get list of employees in the same office as the current Ward Manager.
+     *
+     * @param currentAccount the account of the user making the request
+     * @return list of employees
+     */
+    List<EmployeeResponse> getEmployees(Account currentAccount);
+
+    /**
+     * Get details of a specific employee in the same office as the current Ward Manager.
+     *
+     * @param employeeId the ID of the employee to retrieve
+     * @param currentAccount the account of the user making the request
+     * @return employee details
+     */
+    EmployeeResponse getEmployee(UUID employeeId, Account currentAccount);
+
+    /**
+     * Update an employee's details.
+     *
+     * @param employeeId the ID of the employee to update
+     * @param request the update request
+     * @param currentAccount the account of the user making the request
+     * @return updated employee response
+     */
+    EmployeeResponse updateEmployee(UUID employeeId, UpdateEmployeeRequest request, Account currentAccount);
+
+    /**
+     * Delete an employee.
+     *
+     * @param employeeId the ID of the employee to delete
+     * @param currentAccount the account of the user making the request
+     */
+    void deleteEmployee(UUID employeeId, Account currentAccount);
 }
 

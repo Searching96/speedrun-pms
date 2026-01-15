@@ -9,7 +9,19 @@ const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then(module => ({ 
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then(module => ({ default: module.RegisterPage })));
 const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })));
 const OrdersPage = lazy(() => import('@/pages/orders/OrdersPage').then(module => ({ default: module.OrdersPage })));
-
+const PickupRequestsPage = lazy(() => import('@/pages/customer/PickupRequestsPage').then(module => ({ default: module.PickupRequestsPage })));
+const CustomerTrackingPage = lazy(() => import('@/pages/customer/CustomerTrackingPage'));
+const PickupManagementPage = lazy(() => import('@/pages/staff/PickupManagementPage').then(module => ({ default: module.PickupManagementPage })));
+const TrackingPage = lazy(() => import('@/pages/TrackingPage'));
+const TasksPage = lazy(() => import('@/pages/shipper/TasksPage'));
+const ReceiveOrderPage = lazy(() => import('@/pages/staff/ReceiveOrderPage'));
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const EmployeeManagement = lazy(() => import('@/pages/admin/EmployeeManagement'));
+const WardOfficeManagement = lazy(() => import('@/pages/admin/WardOfficeManagement'));
+const ReportsPage = lazy(() => import('@/pages/admin/ReportsPage'));
+const AdministrativeUnitsPage = lazy(() => import('@/pages/admin/AdministrativeUnitsPage'));
+const StaffOrdersPage = lazy(() => import('@/pages/staff/StaffOrdersPage'));
+const OrderDetailsPage = lazy(() => import('@/pages/orders/OrderDetailsPage'));
 
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -22,6 +34,7 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/track" element={<TrackingPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* Customer Routes */}
@@ -35,7 +48,9 @@ function App() {
         >
           <Route index element={<HomePage />} />
           <Route path="orders" element={<OrdersPage />} />
-          <Route path="tracking" element={<div>Tracking Page</div>} />
+          <Route path="pickups" element={<PickupRequestsPage />} />
+          <Route path="tracking" element={<CustomerTrackingPage />} />
+          <Route path="orders/:trackingNumber" element={<OrderDetailsPage />} />
         </Route>
 
         {/* Admin/Manager Routes */}
@@ -47,7 +62,12 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<div>Admin Dashboard</div>} />
+          <Route index element={<AdminDashboard />} />
+          <Route path="employees" element={<EmployeeManagement />} />
+          <Route path="ward-offices" element={<WardOfficeManagement />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="units" element={<AdministrativeUnitsPage />} />
+          <Route path="orders/:trackingNumber" element={<OrderDetailsPage />} />
         </Route>
 
         {/* Staff Routes */}
@@ -60,8 +80,10 @@ function App() {
           }
         >
           <Route index element={<div>Staff Dashboard</div>} />
-          <Route path="orders" element={<div>Orders Management</div>} />
-          <Route path="pickups" element={<div>Pickup Requests</div>} />
+          <Route path="orders" element={<StaffOrdersPage />} />
+          <Route path="orders/receive" element={<ReceiveOrderPage />} />
+          <Route path="pickups" element={<PickupManagementPage />} />
+          <Route path="orders/:trackingNumber" element={<OrderDetailsPage />} />
         </Route>
 
         {/* Shipper Routes */}
@@ -73,7 +95,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<div>My Tasks</div>} />
+          <Route index element={<TasksPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

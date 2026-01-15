@@ -1,5 +1,20 @@
 import axios from 'axios';
 
+// Augment Axios to return T instead of AxiosResponse<T> since we use a response interceptor
+declare module 'axios' {
+    export interface AxiosInstance {
+        request<T = any, R = T>(config: import('axios').AxiosRequestConfig): Promise<R>;
+        get<T = any, R = T>(url: string, config?: import('axios').AxiosRequestConfig): Promise<R>;
+        delete<T = any, R = T>(url: string, config?: import('axios').AxiosRequestConfig): Promise<R>;
+        head<T = any, R = T>(url: string, config?: import('axios').AxiosRequestConfig): Promise<R>;
+        options<T = any, R = T>(url: string, config?: import('axios').AxiosRequestConfig): Promise<R>;
+        post<T = any, R = T>(url: string, data?: any, config?: import('axios').AxiosRequestConfig): Promise<R>;
+        put<T = any, R = T>(url: string, data?: any, config?: import('axios').AxiosRequestConfig): Promise<R>;
+        patch<T = any, R = T>(url: string, data?: any, config?: import('axios').AxiosRequestConfig): Promise<R>;
+    }
+}
+
+
 // Create a configured axios instance
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '/',
@@ -9,15 +24,9 @@ export const api = axios.create({
     withCredentials: true, // If using cookies, otherwise false is fine but good for future
 });
 
-// Request Interceptor: Attach Token
+// Request Interceptor: No longer need to attach Bearer token manually as we use HTTP-only cookies
 api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
+    (config) => config,
     (error) => Promise.reject(error)
 );
 
@@ -28,16 +37,11 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         // Handle 401 Unauthorized (Token Expired)
-        // Skip for login/register endpoints to allow specific error messages to show
-        // Handle 401 Unauthorized (Token Expired)
-        // Skip for login/register endpoints to allow specific error messages to show
         if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/login')) {
-            // No refresh token available in backend yet.
-            // Production behavior: Clear session and redirect to login to force re-auth.
-            localStorage.removeItem('accessToken');
+            // Clear local user data
             localStorage.removeItem('user');
 
-            // Redirect to login
+            // Redirect to login if not already there
             if (window.location.pathname !== '/login') {
                 window.location.href = '/login?expired=true';
             }

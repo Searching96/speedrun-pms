@@ -18,6 +18,17 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(DomainStatusException.class)
+    public ResponseEntity<ApiResponse<?>> handleDomainStatusException(DomainStatusException ex) {
+        ApiResponse<?> response = ApiResponse.builder()
+                .success(false)
+                .message(ex.getMessage())
+                .errorCode(ex.getErrorCode())
+                .build();
+
+        return ResponseEntity.status(ex.getStatus()).body(response);
+    }
+
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleUserNotFoundException(AccountNotFoundException ex) {
         ApiResponse<?> response = new ApiResponse<>(

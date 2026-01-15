@@ -36,29 +36,24 @@ export function LoginPage() {
     const onSubmit = async (data: LoginFormData) => {
         setIsLoading(true);
         try {
-            // 1. Login to get token
-            const loginResponse = await authApi.login({
+            // 1. Perform Login
+            const loginRes = await authApi.login({
                 username: data.username,
                 password: data.password
             });
 
-            const token = loginResponse.data.token;
+            if (loginRes.data) {
+                const userData = loginRes.data;
 
-            // 2. Set token temporarily to fetch user profile
-            localStorage.setItem('accessToken', token);
+                // 2. Update auth state (Token handled by cookie)
+                login(userData as any);
 
-            // 3. Fetch user profile
-            const userResponse = await authApi.fetchMe();
-            const user = userResponse.data as any;
+                toast.success('Login successful!');
 
-            // 4. Update auth state
-            login(token, user);
-
-            toast.success('Login successful!');
-
-            // Redirect to intended location or home
-            const from = (location.state as any)?.from?.pathname || '/';
-            navigate(from, { replace: true });
+                // Redirect to intended location or home
+                const from = (location.state as any)?.from?.pathname || '/';
+                navigate(from, { replace: true });
+            }
         } catch (error) {
             const apiError = parseApiError(error);
             toast.error(apiError.message);

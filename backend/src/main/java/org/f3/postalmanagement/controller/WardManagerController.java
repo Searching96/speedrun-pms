@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateShipperRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardManagerEmployeeRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardStaffRequest;
+import org.f3.postalmanagement.dto.request.employee.ward.UpdateEmployeeRequest;
 import org.f3.postalmanagement.dto.response.employee.EmployeeResponse;
 import org.f3.postalmanagement.entity.ApiResponse;
 import org.f3.postalmanagement.entity.actor.CustomUserDetails;
@@ -17,6 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/ward-manager")
@@ -91,6 +95,89 @@ public class WardManagerController {
                         .success(true)
                         .message("Shipper created successfully")
                         .data(response)
+                        .build()
+        );
+    }
+
+    @GetMapping("/employees")
+    @PreAuthorize("hasAnyRole('PO_WARD_MANAGER', 'WH_WARD_MANAGER')")
+    @Operation(
+            summary = "Get list of employees in the same office",
+            description = "Get a list of all employees (Staff, Shipper, Ward Manager) in the same office."
+    )
+    public ResponseEntity<ApiResponse<List<EmployeeResponse>>> getEmployees(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        List<EmployeeResponse> response = wardManagerService.getEmployees(userDetails.getAccount());
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EmployeeResponse>>builder()
+                        .success(true)
+                        .message("Employees retrieved successfully")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    @GetMapping("/employees/{employeeId}")
+    @PreAuthorize("hasAnyRole('PO_WARD_MANAGER', 'WH_WARD_MANAGER')")
+    @Operation(
+            summary = "Get employee details",
+            description = "Get details of a specific employee in the same office."
+    )
+    public ResponseEntity<ApiResponse<EmployeeResponse>> getEmployee(
+            @PathVariable UUID employeeId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        EmployeeResponse response = wardManagerService.getEmployee(employeeId, userDetails.getAccount());
+
+        return ResponseEntity.ok(
+                ApiResponse.<EmployeeResponse>builder()
+                        .success(true)
+                        .message("Employee details retrieved successfully")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    @PutMapping("/employees/{employeeId}")
+    @PreAuthorize("hasAnyRole('PO_WARD_MANAGER', 'WH_WARD_MANAGER')")
+    @Operation(
+            summary = "Update employee details",
+            description = "Update an employee's full name, phone number, and email. Password can also be updated."
+    )
+    public ResponseEntity<ApiResponse<EmployeeResponse>> updateEmployee(
+            @PathVariable UUID employeeId,
+            @Valid @RequestBody UpdateEmployeeRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        EmployeeResponse response = wardManagerService.updateEmployee(employeeId, request, userDetails.getAccount());
+
+        return ResponseEntity.ok(
+                ApiResponse.<EmployeeResponse>builder()
+                        .success(true)
+                        .message("Employee updated successfully")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    @DeleteMapping("/employees/{employeeId}")
+    @PreAuthorize("hasAnyRole('PO_WARD_MANAGER', 'WH_WARD_MANAGER')")
+    @Operation(
+            summary = "Delete an employee",
+            description = "Soft delete an employee and deactivate their account. Cannot delete self."
+    )
+    public ResponseEntity<ApiResponse<Void>> deleteEmployee(
+            @PathVariable UUID employeeId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        wardManagerService.deleteEmployee(employeeId, userDetails.getAccount());
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Employee deleted successfully")
                         .build()
         );
     }

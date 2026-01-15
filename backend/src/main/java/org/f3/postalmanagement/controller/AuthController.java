@@ -9,7 +9,9 @@ import org.f3.postalmanagement.dto.request.auth.LoginRequest;
 import org.f3.postalmanagement.dto.response.auth.AuthResponse;
 import org.f3.postalmanagement.entity.ApiResponse;
 import org.f3.postalmanagement.service.IAuthService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,13 +27,44 @@ public class AuthController {
     @Operation(summary = "Login", description = "Login with username and password")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse authResponse = authService.login(request.getUsername(), request.getPassword());
-        return ResponseEntity.ok(
-                ApiResponse.<AuthResponse>builder()
+        
+        ResponseCookie cookie = ResponseCookie.from("accessToken", authResponse.getToken())
+                .httpOnly(true)
+                .secure(false) // Set to true in production with HTTPS
+                .path("/")
+                .maxAge(86400) // 24 hours
+                .sameSite("Lax")
+                .build();
+
+        // Still return the data but the token is now also in a secure cookie
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.<AuthResponse>builder()
                         .success(true)
                         .message("Login successful")
                         .data(authResponse)
                         .build()
-        );
+                );
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Logout", description = "Logout and clear authentication cookie")
+    public ResponseEntity<ApiResponse<Void>> logout() {
+        ResponseCookie cookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Logout successful")
+                        .build()
+                );
     }
 
     @PostMapping("/register")

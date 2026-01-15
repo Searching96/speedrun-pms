@@ -11,10 +11,7 @@ export function OrdersPage() {
     const fetchOrders = async () => {
         setLoading(true)
         try {
-            const response = await orderApi.getMyOrders({
-                page: 0,
-                size: 20, // Load 20 for now
-            })
+            const response = await orderApi.getMyOrders(0, 20)
             // response might be PageOrderResponse or { content: ... }
             // Based on API impl, it returns PageOrderResponse directly
             setOrders(response.content || [])

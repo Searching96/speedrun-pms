@@ -1,30 +1,41 @@
 import { api } from '@/lib/axios';
-import type { CreateOrderRequest, Order, PageOrderResponse, OrderFilters } from './types';
-
-const BASE_URL = '/api/orders';
+import type { CreateOrderFormValues } from './schema';
+import type { OrderResponse, ApiResponse } from '@/types';
 
 export const orderApi = {
-    getMyOrders: async (filters: OrderFilters = {}) => {
-        const params = {
-            page: filters.page || 0,
-            size: filters.size || 10,
-            sortBy: filters.sortBy || 'createdAt',
-            order: filters.order || 'desc',
-        };
-        // Interceptor returns response.data (the body)
-        // We assume the body matches PageOrderResponse directly based on OpenAPI
-        return api.get<any, PageOrderResponse>(BASE_URL, { params });
+    createOrder: async (data: CreateOrderFormValues): Promise<OrderResponse> => {
+        return api.post('/api/orders', data);
     },
 
-    createOrder: async (data: CreateOrderRequest) => {
-        return api.post<any, Order>(BASE_URL, data);
+    getMyOrders: async (page = 0, size = 10) => {
+        return api.get('/api/orders', {
+            params: { page, size },
+        });
     },
 
-    cancelOrder: async (id: string) => {
-        return api.put<any, Order>(`${BASE_URL}/${id}/cancel`);
+    getOrderByTrackingNumber: async (trackingNumber: string): Promise<OrderResponse> => {
+        return api.get(`/api/orders/${trackingNumber}`);
     },
 
-    getOrderByTrackingNumber: async (trackingNumber: string) => {
-        return api.get<any, Order>(`${BASE_URL}/${trackingNumber}`);
-    }
+    cancelOrder: async (orderId: string): Promise<OrderResponse> => {
+        return api.put(`/api/orders/${orderId}/cancel`);
+    },
+
+    calculateShippingFee: async (params: {
+        senderWardCode: string;
+        receiverWardCode: string;
+        weightKg: number;
+        lengthCm?: number;
+        widthCm?: number;
+        heightCm?: number;
+    }): Promise<number> => {
+        const response = await api.post<ApiResponse<number>>('/api/orders/calculate-fee', params);
+        return response.data; // This one needs .data because the backend returns ApiResponse
+    },
+
+    getAllOrders: async (page = 0, size = 10) => {
+        return api.get('/api/orders/all', {
+            params: { page, size }
+        });
+    },
 };

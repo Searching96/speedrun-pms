@@ -4,9 +4,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.f3.postalmanagement.dto.request.order.CalculateShippingFeeRequest;
 import org.f3.postalmanagement.dto.request.order.CreateOrderRequest;
+import org.f3.postalmanagement.entity.ApiResponse;
 import org.f3.postalmanagement.dto.response.order.OrderResponse;
 import org.f3.postalmanagement.service.OrderService;
+import org.f3.postalmanagement.service.ShippingFeeCalculator;
+
+import java.math.BigDecimal;
+import org.f3.postalmanagement.dto.response.order.PublicOrderResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +30,7 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
+    private final ShippingFeeCalculator shippingFeeCalculator;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('CUSTOMER', 'PO_STAFF')")
@@ -48,8 +55,41 @@ public class OrderController {
 
     @GetMapping("/{trackingNumber}")
     @Operation(summary = "Get order by tracking number", description = "Public access to track basic order info")
-    public ResponseEntity<OrderResponse> getOrderByTrackingNumber(@PathVariable String trackingNumber) {
-        return ResponseEntity.ok(orderService.getOrderByTrackingNumber(trackingNumber));
+    public ResponseEntity<PublicOrderResponse> getOrderByTrackingNumber(@PathVariable String trackingNumber) {
+        return ResponseEntity.ok(orderService.getPublicOrderByTrackingNumber(trackingNumber));
+    }
+
+    @PostMapping("/calculate-fee")
+    @Operation(summary = "Calculate shipping fee", description = "Calculate shipping fee based on weight, dimensions, and zones")
+    public ResponseEntity<ApiResponse<BigDecimal>> calculateShippingFee(
+            @Valid @RequestBody CalculateShippingFeeRequest request
+    ) {
+        BigDecimal fee = shippingFeeCalculator.calculateFee(
+            request.getSenderWardCode(),
+            request.getReceiverWardCode(),
+            request.getWeightKg(),
+            request.getLengthCm(),
+            request.getWidthCm(),
+            request.getHeightCm()
+        );
+        return ResponseEntity.ok(ApiResponse.<BigDecimal>builder()
+                .success(true)
+                .data(fee)
+                .build());
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ROLE_SYSTEM_ADMIN')")
+    @Operation(summary = "Get all orders", description = "Admin access to all orders in the system")
+    public ResponseEntity<Page<OrderResponse>> getAllOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String order
+    ) {
+        Sort sort = order.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(orderService.getAllOrders(pageable));
     }
 
     @PutMapping("/{id}/cancel")

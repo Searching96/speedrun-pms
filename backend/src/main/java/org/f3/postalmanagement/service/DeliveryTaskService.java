@@ -2,10 +2,10 @@ package org.f3.postalmanagement.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.f3.postalmanagement.dto.response.DeliveryTaskResponse;
-import org.f3.postalmanagement.entity.DeliveryTask;
-import org.f3.postalmanagement.entity.Order;
-import org.f3.postalmanagement.entity.PickupRequest;
+import org.f3.postalmanagement.dto.response.order.DeliveryTaskResponse;
+import org.f3.postalmanagement.entity.order.DeliveryTask;
+import org.f3.postalmanagement.entity.order.Order;
+import org.f3.postalmanagement.entity.order.PickupRequest;
 import org.f3.postalmanagement.entity.actor.Account;
 import org.f3.postalmanagement.entity.actor.Employee;
 import org.f3.postalmanagement.enums.OrderStatus;

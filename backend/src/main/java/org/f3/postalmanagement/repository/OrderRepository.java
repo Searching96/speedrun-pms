@@ -1,6 +1,6 @@
 package org.f3.postalmanagement.repository;
 
-import org.f3.postalmanagement.entity.Order;
+import org.f3.postalmanagement.entity.order.Order;
 import org.f3.postalmanagement.enums.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

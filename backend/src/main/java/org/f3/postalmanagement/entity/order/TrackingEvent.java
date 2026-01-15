@@ -1,4 +1,5 @@
-package org.f3.postalmanagement.entity;
+package org.f3.postalmanagement.entity.order;
+import org.f3.postalmanagement.entity.BaseEntity;
 
 import jakarta.persistence.*;
 import lombok.*;

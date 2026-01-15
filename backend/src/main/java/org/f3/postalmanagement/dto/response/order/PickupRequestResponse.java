@@ -1,4 +1,4 @@
-package org.f3.postalmanagement.dto.response;
+package org.f3.postalmanagement.dto.response.order;
 
 import lombok.Builder;
 import lombok.Data;

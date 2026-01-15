@@ -1,6 +1,6 @@
 package org.f3.postalmanagement.repository;
 
-import org.f3.postalmanagement.entity.TrackingEvent;
+import org.f3.postalmanagement.entity.order.TrackingEvent;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

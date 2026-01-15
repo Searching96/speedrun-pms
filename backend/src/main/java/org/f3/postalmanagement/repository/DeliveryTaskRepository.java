@@ -1,6 +1,6 @@
 package org.f3.postalmanagement.repository;
 
-import org.f3.postalmanagement.entity.DeliveryTask;
+import org.f3.postalmanagement.entity.order.DeliveryTask;
 import org.f3.postalmanagement.enums.TaskStatus;
 import org.f3.postalmanagement.enums.TaskType;
 import org.springframework.data.jpa.repository.JpaRepository;

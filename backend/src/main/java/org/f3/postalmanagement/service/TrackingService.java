@@ -2,11 +2,11 @@ package org.f3.postalmanagement.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.f3.postalmanagement.dto.response.OrderResponse;
-import org.f3.postalmanagement.dto.response.TrackingEventResponse;
-import org.f3.postalmanagement.dto.response.TrackingResponse;
-import org.f3.postalmanagement.entity.Order;
-import org.f3.postalmanagement.entity.TrackingEvent;
+import org.f3.postalmanagement.dto.response.order.OrderResponse;
+import org.f3.postalmanagement.dto.response.order.TrackingEventResponse;
+import org.f3.postalmanagement.dto.response.order.TrackingResponse;
+import org.f3.postalmanagement.entity.order.Order;
+import org.f3.postalmanagement.entity.order.TrackingEvent;
 import org.f3.postalmanagement.entity.actor.Account;
 import org.f3.postalmanagement.entity.actor.Employee;
 import org.f3.postalmanagement.repository.EmployeeRepository;

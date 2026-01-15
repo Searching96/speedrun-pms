@@ -1,4 +1,4 @@
-package org.f3.postalmanagement.dto.request;
+package org.f3.postalmanagement.dto.request.order;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

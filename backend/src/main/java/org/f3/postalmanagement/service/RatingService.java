@@ -2,11 +2,11 @@ package org.f3.postalmanagement.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.f3.postalmanagement.dto.request.CreateRatingRequest;
-import org.f3.postalmanagement.dto.response.RatingResponse;
-import org.f3.postalmanagement.entity.DeliveryTask;
-import org.f3.postalmanagement.entity.Order;
-import org.f3.postalmanagement.entity.ServiceRating;
+import org.f3.postalmanagement.dto.request.order.CreateRatingRequest;
+import org.f3.postalmanagement.dto.response.order.RatingResponse;
+import org.f3.postalmanagement.entity.order.DeliveryTask;
+import org.f3.postalmanagement.entity.order.Order;
+import org.f3.postalmanagement.entity.order.ServiceRating;
 import org.f3.postalmanagement.entity.actor.Account;
 import org.f3.postalmanagement.entity.actor.Customer;
 import org.f3.postalmanagement.entity.actor.Employee;

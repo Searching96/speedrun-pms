@@ -1,6 +1,6 @@
 package org.f3.postalmanagement.repository;
 
-import org.f3.postalmanagement.entity.PickupRequest;
+import org.f3.postalmanagement.entity.order.PickupRequest;
 import org.f3.postalmanagement.enums.PickupStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

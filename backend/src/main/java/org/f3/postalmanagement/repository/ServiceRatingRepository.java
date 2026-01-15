@@ -1,6 +1,6 @@
 package org.f3.postalmanagement.repository;
 
-import org.f3.postalmanagement.entity.ServiceRating;
+import org.f3.postalmanagement.entity.order.ServiceRating;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -2,10 +2,10 @@ package org.f3.postalmanagement.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.f3.postalmanagement.dto.request.CreatePickupRequest;
-import org.f3.postalmanagement.dto.response.PickupRequestResponse;
-import org.f3.postalmanagement.entity.Order;
-import org.f3.postalmanagement.entity.PickupRequest;
+import org.f3.postalmanagement.dto.request.order.CreatePickupRequest;
+import org.f3.postalmanagement.dto.response.order.PickupRequestResponse;
+import org.f3.postalmanagement.entity.order.Order;
+import org.f3.postalmanagement.entity.order.PickupRequest;
 import org.f3.postalmanagement.entity.actor.Account;
 import org.f3.postalmanagement.entity.actor.Customer;
 import org.f3.postalmanagement.entity.actor.Employee;

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.f3.postalmanagement.dto.request.employee.ward.CreateShipperRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardManagerEmployeeRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardStaffRequest;
 import org.f3.postalmanagement.dto.response.employee.EmployeeResponse;
@@ -71,4 +72,27 @@ public class WardManagerController {
                         .build()
         );
     }
+
+    @PostMapping("/employees/shipper")
+    @PreAuthorize("hasRole('PO_WARD_MANAGER')")
+    @Operation(
+            summary = "Create a new shipper in the same office",
+            description = "Create a new shipper (delivery person) in the Ward Manager's office. " +
+                    "Only PO_WARD_MANAGER can create shippers in their WARD_POST."
+    )
+    public ResponseEntity<ApiResponse<EmployeeResponse>> createShipper(
+            @Valid @RequestBody CreateShipperRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        EmployeeResponse response = wardManagerService.createShipper(request, userDetails.getAccount());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.<EmployeeResponse>builder()
+                        .success(true)
+                        .message("Shipper created successfully")
+                        .data(response)
+                        .build()
+        );
+    }
 }
+

@@ -19,10 +19,10 @@ import java.util.UUID;
 @Component
 public class JwtUtil {
 
-    @Value("ZUZsJvraCKD/K8VtSbkJuw/4jGPIPHPRuBzNkkI97xN2uw2cJrZCT5pGPABywv0Mp9QtzzRz0wm0AebGxUwtUw==")
+    @Value("${jwt.secret:ZUZsJvraCKD/K8VtSbkJuw/4jGPIPHPRuBzNkkI97xN2uw2cJrZCT5pGPABywv0Mp9QtzzRz0wm0AebGxUwtUw==}")
     private String secretKey;
 
-    @Value("86400000")
+    @Value("${jwt.expiration:86400000}")
     private Long expiration;
 
     private SecretKey getSigningKey() {

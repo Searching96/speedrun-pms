@@ -28,6 +28,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        ApiResponse<?> response = new ApiResponse<>(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                null,
+                "RESOURCE_NOT_FOUND"
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<?>> handleBadCredentialsException(BadCredentialsException ex) {
         ApiResponse<?> response = ApiResponse.builder()

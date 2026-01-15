@@ -1,5 +1,6 @@
 package org.f3.postalmanagement.service;
 
+import org.f3.postalmanagement.dto.request.employee.ward.CreateShipperRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardManagerEmployeeRequest;
 import org.f3.postalmanagement.dto.request.employee.ward.CreateWardStaffRequest;
 import org.f3.postalmanagement.dto.response.employee.EmployeeResponse;
@@ -32,4 +33,16 @@ public interface IWardManagerService {
      * @return the created employee response
      */
     EmployeeResponse createWardManager(CreateWardManagerEmployeeRequest request, Account currentAccount);
+
+    /**
+     * Create a new Shipper by Ward Manager.
+     * The shipper will be created in the same office as the Ward Manager.
+     * Only PO_WARD_MANAGER can create shippers (in WARD_POST offices).
+     *
+     * @param request the shipper creation request
+     * @param currentAccount the account of the user making the request
+     * @return the created employee response
+     */
+    EmployeeResponse createShipper(CreateShipperRequest request, Account currentAccount);
 }
+

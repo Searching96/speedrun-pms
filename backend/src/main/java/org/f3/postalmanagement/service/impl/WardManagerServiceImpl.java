@@ -171,13 +171,14 @@ public class WardManagerServiceImpl implements IWardManagerService {
     /**
      * Validate that the office type matches the role being assigned.
      * 
-     * PO_WARD_MANAGER, PO_STAFF -> WARD_POST
-     * WH_WARD_MANAGER, WH_STAFF -> WARD_WAREHOUSE
+     * PO_WARD_MANAGER, PO_STAFF -&gt; WARD_POST
+     * WH_WARD_MANAGER, WH_STAFF -&gt; WARD_WAREHOUSE
      */
     private void validateOfficeTypeForRole(Role role, OfficeType officeType) {
         boolean isValid = switch (role) {
             case PO_WARD_MANAGER, PO_STAFF -> officeType == OfficeType.WARD_POST;
             case WH_WARD_MANAGER, WH_STAFF -> officeType == OfficeType.WARD_WAREHOUSE;
+            case SHIPPER -> officeType == OfficeType.WARD_POST; // Shippers work from Ward Post offices
             default -> false;
         };
 
@@ -188,4 +189,34 @@ public class WardManagerServiceImpl implements IWardManagerService {
             );
         }
     }
+
+    @Override
+    @Transactional
+    public EmployeeResponse createShipper(org.f3.postalmanagement.dto.request.employee.ward.CreateShipperRequest request, Account currentAccount) {
+        Role currentRole = currentAccount.getRole();
+
+        // Only PO_WARD_MANAGER can create shippers
+        if (currentRole != Role.PO_WARD_MANAGER) {
+            log.error("Only PO_WARD_MANAGER can create shippers. Current role: {}", currentRole);
+            throw new AccessDeniedException("Only PO Ward Managers can create Shippers");
+        }
+
+        // Get current employee's office
+        Employee currentEmployee = getCurrentEmployee(currentAccount);
+        Office currentOffice = currentEmployee.getOffice();
+
+        // Validate office type for SHIPPER role
+        validateOfficeTypeForRole(Role.SHIPPER, currentOffice.getOfficeType());
+
+        return createEmployeeInternal(
+                request.getFullName(),
+                request.getPhoneNumber(),
+                request.getPassword(),
+                request.getEmail(),
+                Role.SHIPPER,
+                currentOffice,
+                currentAccount
+        );
+    }
 }
+

@@ -25,7 +25,7 @@ public class OpenAPIConfig {
                 .version("1.0.0")
                 .description("This is the OpenAPI Documentation")
                 .license(new License().name("API License").url("facebook.com")))
-                .servers(List.of(new Server().url("http://localhost:8080").description("Local Server")))
+                .servers(List.of(new Server().url("/").description("Default Server")))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                 .addSecuritySchemes(securitySchemeName,

@@ -57,6 +57,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "false"
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
+      JWT_SECRET: ${JWT_SECRET:-ZUZsJvraCKD/K8VtSbkJuw/4jGPIPHPRuBzNkkI97xN2uw2cJrZCT5pGPABywv0Mp9QtzzRz0wm0AebGxUwtUw==}
     ports:
       - "8080:8080"
     networks:

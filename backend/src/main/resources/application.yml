@@ -4,24 +4,16 @@ spring:
 
   # Database Configuration
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/pms_db}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/pms_db}
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:octguy}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    
-    # HikariCP Connection Pool Configuration
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      pool-name: PMS-HikariPool
+
 
   # JPA/Hibernate Configuration
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -29,19 +21,9 @@ spring:
         format_sql: true
     open-in-view: false
 
-  # Graceful Shutdown
-  lifecycle:
-    timeout-per-shutdown-phase: 30s
-
 # Server Configuration
 server:
   port: 8080
-  shutdown: graceful
-
-# JWT Configuration
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:86400000}
 
 # Logging Configuration
 logging:

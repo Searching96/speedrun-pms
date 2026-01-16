@@ -2,6 +2,7 @@ package org.f3.postalmanagement.entity.pricing;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.f3.postalmanagement.entity.BaseEntity;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.UUID;
@@ -13,14 +14,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PricingZone {
-    
-    @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
-    
+public class PricingZone extends BaseEntity {
+
     @Column(name = "code", unique = true, nullable = false, length = 50)
     private String code; // e.g., "NOI_THANH_HCM", "NGOAI_THANH_HCM", "LIEN_MIEN"
     

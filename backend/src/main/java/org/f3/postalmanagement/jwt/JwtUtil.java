@@ -22,21 +22,11 @@ import java.util.UUID;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+    @Value("ZUZsJvraCKD/K8VtSbkJuw/4jGPIPHPRuBzNkkI97xN2uw2cJrZCT5pGPABywv0Mp9QtzzRz0wm0AebGxUwtUw==")
     private String secretKey;
 
-    @Value("${jwt.expiration:86400000}")
+    @Value("86400000")
     private Long expiration;
-
-    @PostConstruct
-    public void validateConfiguration() {
-        if (secretKey == null || secretKey.isBlank()) {
-            throw new IllegalStateException("JWT secret must be configured via jwt.secret property");
-        }
-        if (secretKey.length() < 64) {
-            throw new IllegalStateException("JWT secret must be at least 64 characters for security");
-        }
-    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
@@ -48,11 +38,6 @@ public class JwtUtil {
 
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
-    }
-
-    @SuppressWarnings("unchecked")
-    public List<String> extractRoles(String token) {
-        return extractClaim(token, claims -> claims.get("roles", List.class));
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
